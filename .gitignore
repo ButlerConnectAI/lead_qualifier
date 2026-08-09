@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+build/
+
+.env
+.env.*
+!.env.example
+
+.trigger/
+.vercel/
+
+*.log
+.DS_Store
+
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# Internal session notes — candid, not written for an audience. Public repo.
+HANDOFF.md

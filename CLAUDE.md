@@ -60,6 +60,19 @@ Anthropic call.
 | `ANTHROPIC_API_KEY` | Trigger.dev dashboard **only**, DEV + PROD | Vercel, the browser, git, this machine |
 | `TRIGGER_SECRET_KEY` | Vercel (server-side) + local `.env.local` | The browser, any `NEXT_PUBLIC_*` var |
 | per-run public token | Generated per request at trigger time | Anywhere persistent |
+| `NEXT_PUBLIC_SUPABASE_URL` | Vercel + `.env.local` | — public by design |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Vercel + `.env.local` | — public by design |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Nowhere.** Not used by this project | Everywhere. `check-env` fails if it exists |
+
+The two Supabase variables are the only keys here that are meant to be readable by
+anyone — they ship in the browser bundle. That is safe **only because row-level security is
+switched on**, so `supabase/schema.sql` is security-critical code and not setup boilerplate. If
+RLS is ever off, every lead in the table is readable by anyone who opens the site, and there is no
+second line of defence behind it.
+
+The service-role key bypasses every policy. Nothing here needs it, which is what keeps the
+publishable key safe to expose. Reaching for it means the design drifted — same rule the Anthropic
+key already lives under.
 
 The frontend never calls Anthropic, so the Anthropic key has no reason to exist in Vercel. Any
 future change that needs it there is a sign the architecture drifted — fix the architecture, not
@@ -83,6 +96,17 @@ Any change to `src/trigger/` or `src/lib/` needs its own deploy:
 ```
 npx trigger.dev@latest deploy
 ```
+
+**`src/server/` is web-only and never needs a deploy.** It exists to keep the rule above
+mechanical: accounts, the session, and lead history are all Next.js-side concerns, and putting
+them in `src/lib/` would fire the deploy rule on every auth change for a task that knows nothing
+about accounts. A rule that cries wolf stops being read. So:
+
+| Folder | Ships via |
+|---|---|
+| `src/trigger/`, `src/lib/` | `git push` **and** `npm run deploy:task` |
+| `src/server/`, `src/app/`, `src/components/` | `git push` only |
+| `supabase/schema.sql` | Neither — pasted into the Supabase SQL editor by hand |
 
 This is the easiest thing in the project to forget, and the failure is silent: the site looks
 fine and quietly runs yesterday's scoring logic. If a rubric change doesn't show up in the output,
@@ -126,6 +150,34 @@ Jake directly — good-fit industries, size range, real budget signals, hard dis
 weigh them. Changing what "qualified" means is a prose edit to that one file plus a deploy.
 
 Don't scatter scoring criteria into the prompt, the form, or the UI. One source of truth.
+
+## Accounts, and the fact that this now stores data
+
+The site is behind a sign-in. Accounts are **invite-only**: there is no signup page, and Jake
+creates users in the Supabase dashboard. That's a cost decision as much as a security one — every
+scoring run spends Anthropic money, so self-registration would let a stranger spend it.
+
+Three rules that are easy to erode:
+
+- **The Data Access Layer is the boundary, not the proxy.** `src/proxy.ts` refreshes the session
+  and does an optimistic redirect, but it runs on every request including prefetches and Next's
+  own docs say not to rely on it. `verifySession()` / `getUser()` in `src/server/dal.ts` is the
+  real check, and every page and every server action does it for itself. Deleting the proxy should
+  cost usability, never safety.
+- **Server actions are public endpoints.** `startQualifyRun`, `fetchRunSnapshot`, `recordOutcome`
+  and `reconcileHistory` are all reachable without ever loading a page, so each one re-checks.
+- **Never trust a verdict sent from the browser.** `recordOutcome` takes a run id and re-reads the
+  result from Trigger.dev server-side.
+
+**This is the first time the project stores anything.** Lead notes contain other people's names,
+roles, and whatever was pasted into the form — that now lives in a third-party database rather
+than only on Jake's screen. Worth knowing before it's discovered: deleting a user in the Supabase
+dashboard cascades and takes their leads with them.
+
+**One accepted limitation.** Trigger.dev only keeps run records for a while. If a run finishes
+while the tab is closed and nobody opens the history page before it ages out, that verdict is gone
+for good — the row goes to `abandoned`. The lead itself is never lost, because it's saved at
+submit time, so the answer is always "score it again".
 
 ## Failure log
 

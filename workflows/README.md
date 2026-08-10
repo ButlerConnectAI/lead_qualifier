@@ -19,9 +19,11 @@ Every file has the same three sections:
 | [04](04-connect.md) | Connect the two halves | Real submit → live verdict, locally |
 | [05](05-deploy.md) | Deploy | A public URL that qualifies a lead |
 | [06](06-evaluate.md) | Tune the rubric | A repeatable scoring loop with a log |
+| [07](07-accounts.md) | Accounts and saved history | Sign-in required, every lead kept per account |
 
 Stages 00–05 ship the product. 06 is ongoing and starts once there's real output worth arguing
-with.
+with. The numbers are build order, not dependency order — 07 came after 06 was written, and
+neither waits on the other.
 
 ## Rules that apply to every stage
 

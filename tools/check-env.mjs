@@ -31,10 +31,30 @@ const KEYS = [
     why: "Identifies the Trigger.dev project.",
   },
   {
+    name: "NEXT_PUBLIC_SUPABASE_URL",
+    local: true,
+    home: "Vercel + .env.local",
+    why: "The address of your Supabase project. Public by design.",
+  },
+  {
+    name: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    local: true,
+    home: "Vercel + .env.local",
+    why: "Lets the browser sign in. Public by design — row-level security is what protects the data.",
+  },
+  {
     name: "ANTHROPIC_API_KEY",
     local: false,
     home: "Trigger.dev dashboard (DEV and PROD)",
     why: "The task calls Claude. The frontend never does, and neither does this machine.",
+    risk: "A local value silently overrides the dashboard's during 'trigger.dev dev'.",
+  },
+  {
+    name: "SUPABASE_SERVICE_ROLE_KEY",
+    local: false,
+    home: "nowhere — this project doesn't use it",
+    why: "It bypasses every row-level security policy. Nothing here needs it, so its presence means something has gone wrong.",
+    risk: "Anything holding this key can read and write every user's leads, policies ignored.",
   },
 ];
 
@@ -71,7 +91,7 @@ for (const key of KEYS.filter((k) => !k.local)) {
       `      ${color("dim", `${key.why}`)}`,
     );
     console.log(
-      `      ${color("dim", `A local value silently overrides the dashboard's during 'trigger.dev dev'. Belongs in: ${key.home}`)}`,
+      `      ${color("dim", `${key.risk} Belongs in: ${key.home}`)}`,
     );
   } else {
     console.log(`  ${color("green", "✓")} ${key.name} — absent, as intended`);
@@ -95,6 +115,18 @@ if (leaked.length) {
   console.log(`      ${color("dim", "Anything NEXT_PUBLIC_ is compiled into the browser bundle.")}`);
 } else {
   console.log(`  ${color("green", "✓")} no secret-looking NEXT_PUBLIC_ variables`);
+}
+
+// The two NEXT_PUBLIC_SUPABASE_ vars are public on purpose and don't trip the
+// check above. Say so out loud, because "a key in the browser bundle" reads
+// like a violation of this project's own rule and it isn't one.
+if (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+  console.log(
+    `  ${color("green", "✓")} Supabase publishable key is in the browser bundle — intended`,
+  );
+  console.log(
+    `      ${color("dim", "It can only do what row-level security allows. See supabase/schema.sql.")}`,
+  );
 }
 
 const gitignore = resolve(ROOT, ".gitignore");

@@ -1,17 +1,22 @@
 "use server";
 
 import { runs, tasks } from "@trigger.dev/sdk";
+import { revalidatePath } from "next/cache";
 
 import { validateWebEnv } from "@/lib/env";
+import { LeadSchema } from "@/lib/types";
+import { getUser } from "@/server/dal";
+import { validateAuthEnv } from "@/server/env";
 import {
-  isFailedRunStatus,
-  isRunPhase,
-  LeadSchema,
-  VerdictSchema,
-  type RunPhase,
-  type Verdict,
-} from "@/lib/types";
+  ownsRun,
+  recordRunOutcome,
+  recordRunStarted,
+  reconcilePending,
+} from "@/server/history";
+import { isRunId, readRun } from "@/server/run-read";
 import type { qualifyLeadTask } from "@/trigger/qualify-lead";
+
+export type { RunSnapshot } from "@/server/run-read";
 
 /**
  * The only server-side step in a scoring run.
@@ -24,6 +29,10 @@ import type { qualifyLeadTask } from "@/trigger/qualify-lead";
  * `qualifyLeadTask` is imported as a type only. A real import would pull the
  * task and the Anthropic SDK into the Next.js bundle, which is exactly the
  * boundary this architecture exists to keep.
+ *
+ * Every action in this file re-checks the session for itself. The proxy also
+ * bounces signed-out visitors, but a server action is a public endpoint and is
+ * reachable without ever loading a page.
  */
 
 export type StartRunResult =
@@ -31,6 +40,18 @@ export type StartRunResult =
   | { ok: false; message: string };
 
 export async function startQualifyRun(input: unknown): Promise<StartRunResult> {
+  // Not `verifySession()`: redirecting out of an action invoked from a submit
+  // handler would throw away a filled-in form. The page already knows how to
+  // show a message.
+  const user = await getUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      message: "You've been signed out. Refresh the page, sign in, and score the lead again.",
+    };
+  }
+
   // Validated in the browser too. That one is a convenience; this one is the
   // boundary, because a server action is a public endpoint.
   const parsed = LeadSchema.safeParse(input);
@@ -46,22 +67,23 @@ export async function startQualifyRun(input: unknown): Promise<StartRunResult> {
 
   try {
     validateWebEnv();
+    validateAuthEnv();
   } catch {
     return {
       ok: false,
       message:
-        "The site can't reach the scorer: TRIGGER_SECRET_KEY isn't set. Run `npm run check-env` — it names what's missing and where it belongs.",
+        "The site can't reach the scorer: a key is missing. Run `npm run check-env` — it names what's missing and where it belongs.",
     };
   }
 
+  let handle;
   try {
-    const handle = await tasks.trigger<typeof qualifyLeadTask>("qualify-lead", parsed.data);
-
-    return {
-      ok: true,
-      runId: handle.id,
-      publicAccessToken: handle.publicAccessToken,
-    };
+    handle = await tasks.trigger<typeof qualifyLeadTask>("qualify-lead", parsed.data, {
+      // Not used by the app. It makes the Trigger.dev dashboard navigable per
+      // person, which is the only way to find a run if its history row is ever
+      // lost.
+      tags: [`user:${user.id}`],
+    });
   } catch (error) {
     // Overwhelmingly the local worker not running, or a key for the wrong
     // environment. Name both, because the raw error names neither.
@@ -73,6 +95,36 @@ export async function startQualifyRun(input: unknown): Promise<StartRunResult> {
         "Couldn't start the scorer. If you're running locally, check `npm run dev:task` is running and shows `Local worker ready`.",
     };
   }
+
+  // Saving the run has to succeed, and this is the one place that's true.
+  //
+  // The page's polling fallback will only answer for runs the caller owns, and
+  // ownership means "there's a row". A run with no row is one the fallback can
+  // never speak for — so if the live subscription also went quiet, a verdict
+  // that had already been paid for would have no way of being collected. That
+  // is the exact failure this project added the fallback to prevent, so an
+  // unsaveable run is stopped rather than started.
+  const saved = await recordRunStarted(handle.id, parsed.data);
+
+  if (!saved) {
+    await runs.cancel(handle.id).catch((error) => {
+      console.error("startQualifyRun: could not cancel orphaned run", handle.id, error);
+    });
+
+    return {
+      ok: false,
+      message:
+        "Your lead couldn't be saved to your history, so the run was stopped rather than left where you'd never find it. Try again.",
+    };
+  }
+
+  revalidatePath("/history");
+
+  return {
+    ok: true,
+    runId: handle.id,
+    publicAccessToken: handle.publicAccessToken,
+  };
 }
 
 /**
@@ -88,51 +140,64 @@ export async function startQualifyRun(input: unknown): Promise<StartRunResult> {
  * This goes through the server rather than the browser's per-run token because
  * the whole point is to not depend on the browser reaching Trigger.dev.
  *
- * It is a public endpoint, so it answers only for this one task's runs and
- * returns only the fields the page renders. The run ID is the capability: it's
- * unguessable, and it's already in the browser of whoever started the run.
+ * Ownership is checked before Trigger.dev is touched. Checking afterwards would
+ * leave this a read oracle for any run of this task — the hole would have moved
+ * rather than closed. Everything it can't answer for looks identical from
+ * outside, so it never reveals whether a given run exists.
  */
-export type RunSnapshot =
-  | { state: "pending"; phase: RunPhase | null; awaitingWorker: boolean }
-  | { state: "done"; verdict: Verdict }
-  | { state: "failed" }
-  | { state: "malformed" }
-  | { state: "unreachable" };
-
-export async function fetchRunSnapshot(runId: unknown): Promise<RunSnapshot> {
-  if (typeof runId !== "string" || !runId.startsWith("run_") || runId.length > 100) {
-    return { state: "unreachable" };
-  }
+export async function fetchRunSnapshot(runId: unknown) {
+  if (!isRunId(runId)) return { state: "unreachable" as const };
 
   try {
     validateWebEnv();
   } catch {
-    return { state: "unreachable" };
+    return { state: "unreachable" as const };
   }
 
-  try {
-    const run = await runs.retrieve<typeof qualifyLeadTask>(runId);
+  // Not `verifySession()`. This is polled every few seconds while a run is in
+  // flight; a redirect fired mid-poll would tear someone off a live scoring
+  // page. "unreachable" is a state the page already knows how to sit with.
+  const user = await getUser();
+  if (!user) return { state: "unreachable" as const };
 
-    if (run.taskIdentifier !== "qualify-lead") return { state: "unreachable" };
+  if (!(await ownsRun(runId))) return { state: "unreachable" as const };
 
-    if (isFailedRunStatus(run.status)) return { state: "failed" };
+  return readRun(runId);
+}
 
-    if (run.status === "COMPLETED") {
-      const parsed = VerdictSchema.safeParse(run.output);
+/**
+ * Write down how a run ended.
+ *
+ * Called from the page the moment it settles on an outcome, so history is
+ * up to date without waiting for anyone to visit it. Takes a run id and
+ * nothing else: the result is re-read from Trigger.dev server-side, because a
+ * verdict posted by the browser is not evidence of anything.
+ */
+export async function recordOutcome(runId: unknown): Promise<void> {
+  if (!isRunId(runId)) return;
 
-      return parsed.success ? { state: "done", verdict: parsed.data } : { state: "malformed" };
-    }
+  const user = await getUser();
+  if (!user) return;
 
-    const phase = (run.metadata as Record<string, unknown> | undefined)?.phase;
+  if (!(await ownsRun(runId))) return;
 
-    return {
-      state: "pending",
-      phase: isRunPhase(phase) ? phase : null,
-      awaitingWorker: run.status === "PENDING_VERSION",
-    };
-  } catch (error) {
-    console.error("fetchRunSnapshot: could not read run", runId, error);
+  await recordRunOutcome(runId);
 
-    return { state: "unreachable" };
-  }
+  revalidatePath("/history");
+}
+
+/**
+ * Catch up anything that finished while the tab was closed.
+ *
+ * Triggered by the history page once it has rendered, rather than during the
+ * render itself — writing to the database as a side effect of rendering makes
+ * the page uncacheable and runs again on every React retry.
+ */
+export async function reconcileHistory(): Promise<void> {
+  const user = await getUser();
+  if (!user) return;
+
+  await reconcilePending();
+
+  revalidatePath("/history");
 }

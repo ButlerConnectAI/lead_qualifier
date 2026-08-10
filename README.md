@@ -12,6 +12,10 @@ judgment. Built with Claude Code.
 form triggers a real run and the verdict streams back into the page. Both halves are
 deployed — the frontend on Vercel, the scoring task on Trigger.dev production.
 
+**The site is behind a sign-in**, and accounts are invite-only — every run costs real money, so
+there is deliberately no signup page. Signed-in users get their own saved history of everything
+they've scored, separated by Postgres row-level security rather than by the UI hiding things.
+
 ## The problem it solves
 
 A one-person agency has one genuinely scarce resource, and it isn't leads — it's weeks.
@@ -37,8 +41,11 @@ The whole design turns on one decision: **the browser never waits on Claude.**
 ```mermaid
 flowchart TD
     A[Form submit] --> B[Next.js server action]
-    B --> C[tasks.trigger — returns immediately]
-    C --> D[run id + per-run public token]
+    B --> M{Signed in?}
+    M -->|no| N[Redirect to /login]
+    M -->|yes| C[tasks.trigger — returns immediately]
+    C --> P[(Save run to Supabase)]
+    P --> D[run id + per-run public token]
     D --> E[Browser]
     E -.->|useRealtimeRun, direct subscription| F[Trigger.dev]
     E -.->|fallback: poll every 3s| L[Server action: read the run]
@@ -49,6 +56,7 @@ flowchart TD
     I --> J[Claude — structured output]
     J --> K[Verdict]
     K -.->|streamed| F
+    E -.->|on finish, re-read server-side| P
 ```
 
 The server action triggers the task and gets back a run ID plus a `publicAccessToken`
@@ -71,8 +79,17 @@ without raising an error — a buffering proxy or a browser extension that block
 connection both present as a run that never ends — and a page that trusts it alone will sit
 there until it times out and then blame the scorer for work the scorer already finished. So
 the page also polls a server action that reads the run directly. Whichever reaches a terminal
-state first wins. That endpoint is public, so it answers only for this task's runs and returns
-only the fields the page renders; the run ID is the capability, and it's unguessable.
+state first wins. That endpoint answers only for this task's runs, only for the account that
+started them, and returns only the fields the page renders — everything it can't answer for
+looks identical from outside, so it never reveals whether a given run exists.
+
+**Adding accounts made that endpoint's design load-bearing in a way worth spelling out.** Once
+it checks "does this run belong to you", ownership has to be something it can always determine —
+and a row-level-security query cannot distinguish *no such row* from *a row you can't see*. So
+saving a run has to succeed before the run is allowed to proceed: if the history write fails, the
+run is cancelled rather than started. Otherwise a run could exist that nothing is permitted to
+poll for, and a paid verdict would have no way home — the exact failure the fallback above exists
+to prevent.
 
 ## Design decisions worth explaining
 
@@ -132,6 +149,26 @@ sets run metadata, validates, calls `qualify()`, logs. All the scoring logic is 
 without retry behavior and run metadata tangled into it — and so the rubric is testable
 without a run.
 
+**The database enforces privacy, not the interface.** Accounts and history run on Supabase, and
+the key the browser holds is public by design — it ships in the JavaScript bundle. What separates
+one account's leads from another's is Postgres row-level security: every policy in
+[`supabase/schema.sql`](./supabase/schema.sql) is scoped to `auth.uid()`, so a query physically
+cannot return someone else's row. That makes the schema security-critical code rather than setup
+boilerplate, and it means no `service_role` key exists anywhere in this project — one would bypass
+every policy and is the thing that would make the public key unsafe.
+
+The consequence worth stealing: authorization stops being an application-level filter you have to
+remember to write correctly at every call site. `select … where user_id = ?` is a check you can
+forget; a policy is one the database applies whether you remembered or not.
+
+**The proxy is not the security boundary.** [`src/proxy.ts`](./src/proxy.ts) refreshes the session
+and redirects signed-out visitors, but it runs on every request including prefetches, and Next's
+own guidance is not to rely on it. The real check is a small data-access layer called next to the
+data it protects — every page and every server action runs it for itself, because a server action
+is a public endpoint reachable without ever loading a page. Deleting the proxy should cost
+usability, never safety. That's testable, and it's how the redirect behaviour was verified: with
+the proxy passing traffic straight through, protected routes still refused to render.
+
 ## The bug that shaped the design
 
 The first version of the rubric told the model to let unknown fields drag the score down.
@@ -172,16 +209,30 @@ visible in the output before anyone thought to question the score.
 
 ## Running it
 
-You need a [Trigger.dev](https://trigger.dev) project and an
-[Anthropic API key](https://console.anthropic.com). Node 20+.
+You need a [Trigger.dev](https://trigger.dev) project, a [Supabase](https://supabase.com)
+project, and an [Anthropic API key](https://console.anthropic.com). Node 20+.
 
 ```bash
 npm install
-cp .env.example .env.local     # fill in TRIGGER_SECRET_KEY and TRIGGER_PROJECT_ID
+cp .env.example .env.local     # fill in the Trigger.dev and Supabase values
 ```
 
 Set `ANTHROPIC_API_KEY` in the **Trigger.dev dashboard**, under both DEV and PROD. Not in
 `.env.local` — `npm run check-env` fails if it finds one there, and explains why.
+
+For Supabase: paste [`supabase/schema.sql`](./supabase/schema.sql) into the SQL editor (it's
+re-runnable), then add `http://localhost:3000/auth/callback` to the project's redirect URLs.
+Confirm row-level security actually came up — by query, not by the Table Editor's badge, which is
+frequently absent:
+
+```sql
+select relrowsecurity, (select count(*) from pg_policies where tablename = 'lead_runs')
+from pg_class where relname = 'lead_runs';   -- expect: true, 4
+```
+
+**There is no signup page.** Accounts are created by invitation from the Supabase dashboard
+(Authentication → Users → Add user), deliberately: every run costs money, so self-registration
+would let strangers spend it. Invite yourself before first use.
 
 Two terminals:
 
@@ -213,6 +264,11 @@ iteration loop; deploying to test a prose change is unnecessary.
 change to `src/trigger/` or `src/lib/` — including the rubric — needs `npm run deploy:task`
 as well.
 
+`src/server/` exists to keep that rule mechanical. Accounts, sessions and history are web-only
+concerns, so they live there rather than in `src/lib/`; putting them in the shared folder would
+make the deploy rule fire on every auth change for a task that knows nothing about accounts, and
+a rule that cries wolf stops being read.
+
 This is the easiest thing here to forget and the failure is silent: the site looks fine and
 quietly scores with yesterday's criteria. If a rubric change doesn't show up in the output,
 check this before debugging the prompt.
@@ -221,4 +277,5 @@ check this before debugging the prompt.
 
 Next.js 16 (App Router) · TypeScript · Tailwind · Trigger.dev 4.5.9 ·
 `@trigger.dev/react-hooks` (`useRealtimeRun`) · Anthropic SDK · `claude-sonnet-5`
-(effort `high`, structured output via zod) · Vercel · built with Claude Code
+(effort `high`, structured output via zod) · Supabase (auth + Postgres with row-level security,
+via `@supabase/ssr`) · Vercel · built with Claude Code

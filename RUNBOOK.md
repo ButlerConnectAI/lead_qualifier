@@ -29,11 +29,20 @@ decided, what's been tried, what not to redo. It stays on your machine and is ne
 | 04 | Join the form to the scorer | **Done** — you ran it, a real verdict came back |
 | 05 | Put it live | **Done** — it's on the internet, and you've scored a lead on it |
 | 06 | A way to measure rubric changes | Optional, later |
+| 07 | Accounts, and saved lead history | **Built, not yet set up** — needs the one-time Supabase setup below |
 
-**Your site is live at https://lead-qualifier-beige.vercel.app/** — open it on your phone, send
-the link to anyone. Both halves are deployed: the website on Vercel, the scorer on Trigger.dev.
-**You've scored a lead on it and the verdict came back**, so the whole path is proven end to end.
-Nothing is outstanding — every stage that was planned as required is finished.
+**Your site is live at https://lead-qualifier-beige.vercel.app/** — both halves are deployed: the
+website on Vercel, the scorer on Trigger.dev. **You've scored a lead on it and the verdict came
+back**, so the whole path is proven end to end.
+
+> **One thing is outstanding.** Stage 07 — accounts and saved history — is **built but not set
+> up**. The code is in place; it needs a Supabase project before it will do anything. Until you do
+> [Set up accounts](#set-up-accounts-once), the site will show "Accounts aren't set up yet"
+> instead of the form. Nothing was lost — that's the code telling you what it's waiting for.
+>
+> Note what changes when you finish it: **the site stops being open to anyone with the link.**
+> Right now a stranger who finds the URL can score leads on your Anthropic bill. Afterwards, only
+> people you've invited can, and every lead you score is saved so you can look back at it.
 
 **The form is real.** What you type is what gets scored. The saved examples and the Preview strip
 along the bottom are gone — deleted, not hidden — so there is nothing fake left on the page to
@@ -62,9 +71,14 @@ on, and it's the one that will catch you.
 | `npm run check-env` | Check your keys are where they should be. |
 | `npm run deploy:task` | Push criteria or scorer changes live. |
 
+No new commands were added for accounts. The setup is all done in a browser.
+
 Then jump to what you're doing:
 
 - [Starting a fresh chat](#starting-a-fresh-chat) — what to say, and where the build is up to
+- [Set up accounts](#set-up-accounts-once) — **do this first, once**
+- [Signing in, and inviting people](#signing-in-and-inviting-people)
+- [Your lead history](#your-lead-history)
 - [Score a lead](#score-a-lead) · [Read the result](#read-the-result)
 - [Look at the website](#look-at-the-website)
 - [Change what "qualified" means](#change-what-qualified-means)
@@ -87,6 +101,126 @@ There are two halves and they run separately:
 
 They live in the same folder but ship to different places, which is the one genuine trap in this
 project. See [Two deploys, one folder](#two-deploys-one-folder).
+
+---
+
+## Set up accounts (once)
+
+Do this once, in a browser. It takes about ten minutes and there's nothing to type into a terminal
+until the last step.
+
+**1. Make a Supabase project.** Go to [supabase.com](https://supabase.com), sign up, create a new
+project. It asks for a name, a database password, and a **region**.
+
+- The password is for the database itself. You will almost certainly never need it again, but save
+  it somewhere anyway.
+- **Pick the region closest to you.** This matters more than it looks: your site talks to this
+  project on every page load, and a project on the other side of the world adds a visible pause to
+  everything.
+
+It takes a minute or two to finish building.
+
+**2. Create the table.** In the left sidebar click **SQL Editor**, then **New query**. Open the
+file `supabase/schema.sql` from this folder, copy the whole thing, paste it in, and click **Run**.
+
+You should see "Success. No rows returned." That's right — it built an empty table.
+
+**3. Check it locked the door.** Ask the database directly rather than looking for a badge in the
+Table Editor — Supabase moves that around between versions, and it often shows nothing at all.
+
+New query, paste this, Run. It only reads:
+
+```sql
+select
+  relrowsecurity as "protection_on",
+  (select count(*) from pg_policies where tablename = 'lead_runs') as "rules"
+from pg_class
+where relname = 'lead_runs';
+```
+
+You want **protection_on = true** and **rules = 4**. Anything else and the file didn't fully run —
+stop and say so, because until that's fixed anyone could read your leads.
+
+**4. Copy two values into this project.** In Supabase go to **Project Settings → API Keys**. You
+need two things: the **Project URL** and the **publishable** key.
+
+Open the file `.env.local` in this folder **in your editor** and add them:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+Paste each value after its `=`. Save the file.
+
+> Do this by editing the file, not by typing a command with the key in it. Anything typed into a
+> terminal is written to a history file on this machine and stays there.
+
+**5. Tell Supabase where your site is.** In Supabase, go to **Authentication → URL Configuration**.
+
+- Set **Site URL** to `https://lead-qualifier-beige.vercel.app`
+- Under **Redirect URLs**, add both of these:
+  - `https://lead-qualifier-beige.vercel.app/auth/callback`
+  - `http://localhost:3000/auth/callback`
+
+Without this, the links in your invite emails will refuse to work.
+
+**6. Put the same two values in Vercel.** Vercel → your project → **Settings → Environment
+Variables**. Add the same two names and values. Then redeploy, or just push anything, so the live
+site picks them up.
+
+**7. Check it.**
+
+```
+npm run check-env
+```
+
+You want the two Supabase lines under "Required locally", a line saying the publishable key being
+in the browser is intended, and "All good."
+
+---
+
+## Signing in, and inviting people
+
+**There is no sign-up page, on purpose.** Anyone who could sign themselves up could score leads on
+your Anthropic bill. You create the accounts.
+
+**To invite someone (including yourself, the first time):**
+
+Supabase → **Authentication → Users** → **Add user** → **Send invitation email**. Type their email
+address and send it.
+
+They get an email with a link. Clicking it brings them to your site and asks them to choose a
+password. After that they're in, and they sign in with that email and password from then on.
+
+**Do this for yourself first**, before anything else — until you do, you can't get into your own
+site.
+
+**Forgotten password:** there's a link on the sign-in page. It emails a fresh link that lets you
+pick a new one. The link is good for about an hour and only works once.
+
+> **A warning about email.** Supabase's built-in mailer is rate-limited to a handful of messages an
+> hour and is meant for testing. That's fine for inviting a few people. If you ever need to invite
+> a lot at once, they'll silently stop arriving and you'll need to connect a real email provider —
+> ask and it can be set up.
+
+---
+
+## Your lead history
+
+Once you're signed in there's a **History** link at the top of the page. Every lead you score is
+saved there automatically — the score, the verdict, and what you originally typed.
+
+**Only you can see yours.** Each account sees its own leads and nobody else's. That's enforced by
+the database itself, not by the page hiding things.
+
+Two things worth knowing:
+
+- **If you close the tab while a lead is still scoring**, that's fine. It shows as "Scoring…" and
+  fills itself in the next time you open the History page.
+- **If you leave it more than a day**, the result may be gone — the scorer only keeps its records
+  for a while. The row will say "Result expired". What you typed is never lost, so you can score it
+  again.
 
 ---
 
@@ -330,6 +464,7 @@ The single easiest thing to get wrong here. Worth reading twice.
 | What you changed | What ships it |
 |---|---|
 | How the website looks | `git push` — Vercel rebuilds on its own |
+| Anything about accounts or history | `git push` — nothing else |
 | The criteria, or the scorer | `npm run deploy:task` |
 
 They are not the same button, and the failure is silent: **the site looks fine and quietly scores
@@ -351,6 +486,11 @@ you haven't found a bug, you've found this. Run `npm run deploy:task`.
 | On the site: "Couldn't get the result back" | Both ways the page has of collecting the verdict went quiet at once — almost always your connection. The scoring itself may well have finished; it'll be in your run history. Scoring again is safe and costs one more run. |
 | On the site: "The run took too long" | The scorer genuinely hadn't finished after three minutes. Rare. It'll be in your run history with what it was doing. |
 | `npm` isn't recognized, or commands do nothing | Wrong folder. You need to be in `C:\Lead Qualifier`. |
+| "Accounts aren't set up yet" | The Supabase keys are missing. Work through [Set up accounts](#set-up-accounts-once), then `npm run check-env`. |
+| It keeps sending me back to the sign-in page | Your session isn't sticking. Usually the two Supabase variables are missing from **Vercel** (they're set locally, so it works on your machine and not on the live site). |
+| The invite email link says "That link didn't work" | Either it's been used already, or it's over an hour old, or the redirect URLs in step 5 above are missing. Send a fresh invite and check step 5. |
+| The invite email never arrives | Check spam first. Supabase's built-in mailer is rate-limited — if you've sent several in a row, wait an hour. |
+| A lead is stuck on "Scoring…" in History | Open the History page and give it a few seconds; it catches up on its own. If it says "Result expired", the scorer's record of it aged out — score the lead again. |
 
 **The Anthropic key lives in the Trigger.dev dashboard and nowhere else** — deliberately, so there's
 no copy of it on this computer.

@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRealtimeRun } from "@trigger.dev/react-hooks";
 
-import { fetchRunSnapshot, startQualifyRun, type RunSnapshot } from "@/app/actions";
+import {
+  fetchRunSnapshot,
+  recordOutcome,
+  startQualifyRun,
+  type RunSnapshot,
+} from "@/app/actions";
 import { isFailedRunStatus, VerdictSchema, type Lead, type RunPhase, type Verdict } from "@/lib/types";
 import type { qualifyLeadTask } from "@/trigger/qualify-lead";
 import { ErrorNotice } from "./error-notice";
@@ -196,22 +201,33 @@ function RunWatcher({
 
   const settled = useRef(false);
 
+  // Saving the outcome hangs off `settled`, which already guarantees exactly
+  // once. It's deliberately not awaited: a history write must never be able to
+  // keep a verdict off the screen. The server re-reads the run rather than
+  // believing anything sent from here, and does nothing if the run is still
+  // going — which is why the give-up paths below can call it too.
+  const record = useCallback(() => {
+    void recordOutcome(runId).catch(() => {});
+  }, [runId]);
+
   const complete = useCallback(
     (verdict: Verdict) => {
       if (settled.current) return;
       settled.current = true;
+      record();
       onComplete(verdict);
     },
-    [onComplete],
+    [onComplete, record],
   );
 
   const fail = useCallback(
     ([title, message]: readonly [string, string]) => {
       if (settled.current) return;
       settled.current = true;
+      record();
       onFailure(title, message);
     },
-    [onFailure],
+    [onFailure, record],
   );
 
   // Read by the timers below, which fire long after the render that set them.

@@ -39,9 +39,12 @@ Two ways to tell a fake from a real score until then: the Preview strip along th
 page, and the speed — a saved example appears in about three seconds, a real score takes 15–25
 because the AI is actually reading the lead.
 
-**Nothing since the README is committed yet** — the screens and the runbook are all sitting as
-uncommitted changes. That's deliberate, so nothing gets locked in before you've looked. Ask for a
-commit whenever you want one.
+**Everything is committed and pushed to GitHub** as of 9 August — the screens, this runbook, and
+the switch to American wording all went up in one commit. Your keys and the internal notes were
+checked and left out; nothing sensitive is public.
+
+Pushing to GitHub is only half a release, and right now it's the half that does nothing visible:
+there's still no website live, because no Vercel project exists yet. That's stage 05.
 
 ---
 

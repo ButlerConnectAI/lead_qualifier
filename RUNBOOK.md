@@ -233,6 +233,11 @@ same as a lead scored from the terminal.
 running, rather than spinning forever. That's worth trying deliberately once — it's the mistake
 you're most likely to make later, and it's better to recognize the message now.
 
+**If the verdict doesn't appear but the run shows Completed in your dashboard**, that's the fault
+fixed on 2026-08-09 and it shouldn't happen again. The page now collects the result two
+independent ways, so one of them failing quietly no longer strands you. If you do see it again,
+say so — it means something new is wrong.
+
 **What to judge:**
 
 - Does the verdict match what you'd get from `npm run smoke` on the same lead? Different wording is
@@ -341,7 +346,8 @@ you haven't found a bug, you've found this. Run `npm run deploy:task`.
 | "Could not trigger qualify-lead", or it just hangs | Terminal 1 isn't running. Start `npm run dev:task` and wait for `Local worker ready` before retrying. |
 | "TRIGGER_SECRET_KEY is not set" | `.env.local` is missing or empty. Run `npm run check-env` — it names exactly what's missing and where it belongs. |
 | The run starts, then fails partway | Almost always the Anthropic key missing from the Trigger.dev dashboard. Check both DEV and PROD at [cloud.trigger.dev](https://cloud.trigger.dev). |
-| On the site: "Lost contact with the run" | The page stopped hearing back — usually the tab sat open a long time. The run may well have finished; it'll be in the dashboard. Scoring again is safe and costs one more run. |
+| On the site: "Couldn't get the result back" | Both ways the page has of collecting the verdict went quiet at once — almost always your connection. The scoring itself may well have finished; it'll be in your run history. Scoring again is safe and costs one more run. |
+| On the site: "The run took too long" | The scorer genuinely hadn't finished after three minutes. Rare. It'll be in your run history with what it was doing. |
 | `npm` isn't recognized, or commands do nothing | Wrong folder. You need to be in `C:\Lead Qualifier`. |
 
 **The Anthropic key lives in the Trigger.dev dashboard and nowhere else** — deliberately, so there's

@@ -64,6 +64,14 @@ that state gets a few seconds' grace and then names the missing command, backed 
 timer set above the task's own `maxDuration` so a slow run is never cut off early. A failed
 run leaves the form filled in.
 
+**The subscription is the fast path, not the only path.** A realtime stream can go quiet
+without raising an error — a buffering proxy or a browser extension that blocks the
+connection both present as a run that never ends — and a page that trusts it alone will sit
+there until it times out and then blame the scorer for work the scorer already finished. So
+the page also polls a server action that reads the run directly. Whichever reaches a terminal
+state first wins. That endpoint is public, so it answers only for this task's runs and returns
+only the fields the page renders; the run ID is the capability, and it's unguessable.
+
 ## Design decisions worth explaining
 
 **The rubric is prose, in one file.** [`src/lib/icp.ts`](./src/lib/icp.ts) holds the

@@ -121,3 +121,25 @@ export const RUN_PHASES = {
 } as const;
 
 export type RunPhase = keyof typeof RUN_PHASES;
+
+/**
+ * Terminal states that are not success. Read by both the live subscription and
+ * the server-side fallback lookup, so the two can't disagree about what
+ * counts as a failure.
+ */
+export const RUN_FAILED_STATUSES = [
+  "FAILED",
+  "CRASHED",
+  "SYSTEM_FAILURE",
+  "CANCELED",
+  "EXPIRED",
+  "TIMED_OUT",
+] as const;
+
+export function isFailedRunStatus(status: string): boolean {
+  return (RUN_FAILED_STATUSES as readonly string[]).includes(status);
+}
+
+export function isRunPhase(value: unknown): value is RunPhase {
+  return typeof value === "string" && value in RUN_PHASES;
+}

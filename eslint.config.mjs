@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Trigger.dev's build scratch. Git-ignores it; eslint didn't, so any build
+    // left `npm run lint` reporting thousands of problems in bundled deps.
+    ".trigger/**",
   ]),
 ]);
 

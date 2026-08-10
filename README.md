@@ -7,10 +7,9 @@ committing, and the terms to get in writing before starting.
 Next.js on Vercel for the form, a Trigger.dev task for the scoring, Claude for the
 judgment. Built with Claude Code.
 
-**Status:** the scoring half is built and working, and the frontend screens — the form,
-the waiting state, the verdict — are built and styled. The two halves are not joined yet:
-submitting the form doesn't trigger a run. That connection is the current stage. The
-*Architecture* section marks which parts are implemented and which are still design.
+**Status:** working end to end, locally. Submitting the form triggers a real run and the
+verdict streams back into the page. Not deployed — there's no Vercel project yet, so
+nothing is public.
 
 ## The problem it solves
 
@@ -58,10 +57,11 @@ waiting on an LLM, so scoring can take as long as it needs — thinking included
 approaching a function timeout. That's the entire reason for the extra moving part, and
 it's the thing not to "simplify" into a route handler that awaits the Anthropic call.
 
-*Implemented:* the task, the scoring, the schemas, the env validation, the dev loop, and
-the three screens — form, waiting state, verdict.
-*Designed, not yet built:* the server action that triggers the run, and the browser's
-realtime subscription to it — the two steps that join the screens to the scorer.
+Every arrow above is implemented. The run's failure paths are wired too, and none of them
+terminate in a spinner: a run sits in `PENDING_VERSION` when no worker can pick it up, so
+that state gets a few seconds' grace and then names the missing command, backed by a stall
+timer set above the task's own `maxDuration` so a slow run is never cut off early. A failed
+run leaves the form filled in.
 
 ## Design decisions worth explaining
 
@@ -194,7 +194,7 @@ iteration loop; deploying to test a prose change is unnecessary.
 | `npm run new-lead` | Save a lead as a test case |
 | `npm run check-env` | Verify every key is where it belongs — and isn't where it doesn't |
 | `npm run deploy:task` | Deploy the scoring task |
-| `npm run dev` | Next.js dev server *(screens built; not yet wired to the scorer)* |
+| `npm run dev` | Next.js dev server — needs `dev:task` running alongside it to score |
 
 ### Two deploys, one repo
 

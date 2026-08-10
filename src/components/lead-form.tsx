@@ -68,14 +68,20 @@ const EMPTY = Object.fromEntries(LEAD_FIELDS.map((field) => [field, ""])) as Rec
   string
 >;
 
+export type LeadFormValues = Record<FieldName, string>;
+
 export function LeadForm({
   onSubmit,
   busy,
+  defaultValues,
 }: {
-  onSubmit: (lead: Lead) => void;
+  // The raw strings come back alongside the parsed lead so a failed run can
+  // re-render this form still filled in, rather than losing what was typed.
+  onSubmit: (lead: Lead, raw: LeadFormValues) => void;
   busy: boolean;
+  defaultValues?: LeadFormValues;
 }) {
-  const [values, setValues] = useState<Record<FieldName, string>>(EMPTY);
+  const [values, setValues] = useState<LeadFormValues>(defaultValues ?? EMPTY);
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -100,7 +106,7 @@ export function LeadForm({
     }
 
     setErrors({});
-    onSubmit(result.data);
+    onSubmit(result.data, values);
   }
 
   function change(field: FieldName, value: string) {

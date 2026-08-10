@@ -26,22 +26,22 @@ decided, what's been tried, what not to redo. It stays on your machine and is ne
 | 01 | Your criteria written down | Done |
 | 02 | The scorer | **Done** — you ran all three leads, all three matched |
 | 03 | The screens | **Done** — built and you've run it |
-| 04 | Join the form to the scorer | **Next, and not started** |
-| 05 | Put it live | Not started — nothing is live yet, no website exists publicly |
+| 04 | Join the form to the scorer | **Done** — you ran it, a real verdict came back |
+| 05 | Put it live | **Next, and not started** — nothing is live yet, no website exists publicly |
 | 06 | A way to measure rubric changes | Optional, later |
 
-**Stage 04 is what makes the form real.** Right now, filling it in and pressing *Score this lead*
-shows one of three saved examples and ignores what you typed. Stage 04 connects it to the scorer,
-so what you type is what gets scored, and deletes the saved examples and the Preview strip so
-there's nothing fake left to confuse a real result with.
+**The form is real.** What you type is what gets scored. The saved examples and the Preview strip
+along the bottom are gone — deleted, not hidden — so there is nothing fake left on the page to
+mistake for a real result.
 
-Two ways to tell a fake from a real score until then: the Preview strip along the bottom of the
-page, and the speed — a saved example appears in about three seconds, a real score takes 15–25
-because the AI is actually reading the lead.
+The one thing that changed for you day to day: **looking at the website now needs the scorer
+running too**, in a second terminal. See [Look at the website](#look-at-the-website).
 
-**Everything is committed and pushed to GitHub** as of 9 August — the screens, this runbook, and
-the switch to American wording all went up in one commit. Your keys and the internal notes were
-checked and left out; nothing sensitive is public.
+**Everything is committed and pushed to GitHub.** Your keys and the internal notes were checked and
+left out; nothing sensitive is public.
+
+Pushing to GitHub still doesn't put anything on the internet, because no Vercel project exists yet.
+That's stage 05 — it's the stage that gives you a URL.
 
 Pushing to GitHub is only half a release, and right now it's the half that does nothing visible:
 there's still no website live, because no Vercel project exists yet. That's stage 05.
@@ -54,7 +54,7 @@ there's still no website live, because no Vercel project exists yet. That's stag
 |---|---|
 | `npm run dev:task` | Start the scorer. Leave it running. |
 | `npm run smoke -- <name>` | Score a saved lead and print the verdict. |
-| `npm run dev` | Open the website at localhost:3000. |
+| `npm run dev` | Open the website at localhost:3000. Needs the scorer running too. |
 | `npm run new-lead` | Save a lead as a test case. |
 | `npm run check-env` | Check your keys are where they should be. |
 | `npm run deploy:task` | Push criteria or scorer changes live. |
@@ -197,35 +197,38 @@ thing that's wrong.
 
 ## Look at the website
 
-One terminal, nothing else running:
+**This now needs two terminals**, because the website and the scorer are separate things and the
+website can't score anything on its own.
+
+**Terminal 1 — start the scorer.** Leave it running, same as scoring a lead by hand:
+
+```
+npm run dev:task
+```
+
+Wait for `Local worker ready`, about 10 seconds.
+
+**Terminal 2 — start the website:**
 
 ```
 npm run dev
 ```
 
-Then open **http://localhost:3000**. Press `Ctrl+C` when you're done.
+Then open **http://localhost:3000**, fill the form in, and press *Score this lead*. `Ctrl+C` in
+both when you're done.
 
-**It is not connected to the scorer yet** — that's the next stage. The screens are wired to four
-saved example verdicts so you can judge how they look before anything real flows through them.
-Filling in the form and pressing *Score this lead* shows the waiting screen and then a result, but
-that result is a saved example, not a score of what you typed. Press it three times to cycle
-through all three.
+**What you type is what gets scored.** It takes 15–25 seconds, the status text changes as it goes,
+and the verdict that appears is a real one. The run also shows up in your Trigger.dev dashboard,
+same as a lead scored from the terminal.
 
-Along the bottom is a **Preview** strip that jumps straight to each screen:
-
-| Link | What it shows |
-|---|---|
-| Form | The blank form |
-| Qualified | A green verdict, full of detail |
-| Nurture | An amber verdict — the accounting firm |
-| Disqualified | A red verdict, and how it looks with no questions to ask |
-| Empty | A verdict with both lists empty, to check nothing looks broken |
-
-That strip only exists on your machine. It never appears on the live site, and it gets deleted
-once the real connection is in.
+**If you forget Terminal 1**, the page waits a few seconds and then tells you the scorer isn't
+running, rather than spinning forever. That's worth trying deliberately once — it's the mistake
+you're most likely to make later, and it's better to recognize the message now.
 
 **What to judge:**
 
+- Does the verdict match what you'd get from `npm run smoke` on the same lead? Different wording is
+  fine and expected. A different **tier** is not.
 - Is the verdict readable top to bottom?
 - Is "Ask before committing" easy enough to find? That's your list for the call.
 - Would you be happy having this on screen in front of a client?
@@ -325,10 +328,12 @@ you haven't found a bug, you've found this. Run `npm run deploy:task`.
 
 | What you see | What it is |
 |---|---|
+| On the site: "The scorer isn't running" | Exactly what it says. Start `npm run dev:task` in a second terminal, wait for `Local worker ready`, and score the lead again — what you typed is still there. |
 | "Could not trigger qualify-lead", or it just hangs | Terminal 1 isn't running. Start `npm run dev:task` and wait for `Local worker ready` before retrying. |
 | "TRIGGER_SECRET_KEY is not set" | `.env.local` is missing or empty. Run `npm run check-env` — it names exactly what's missing and where it belongs. |
 | The run starts, then fails partway | Almost always the Anthropic key missing from the Trigger.dev dashboard. Check both DEV and PROD at [cloud.trigger.dev](https://cloud.trigger.dev). |
-| `npm` isn't recognised, or commands do nothing | Wrong folder. You need to be in `C:\Lead Qualifier`. |
+| On the site: "Lost contact with the run" | The page stopped hearing back — usually the tab sat open a long time. The run may well have finished; it'll be in the dashboard. Scoring again is safe and costs one more run. |
+| `npm` isn't recognized, or commands do nothing | Wrong folder. You need to be in `C:\Lead Qualifier`. |
 
 **The Anthropic key lives in the Trigger.dev dashboard and nowhere else** — deliberately, so there's
 no copy of it on this computer.

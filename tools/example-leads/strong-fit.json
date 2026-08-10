@@ -1,15 +1,15 @@
 {
   "company": "Northgate Plumbing Supply",
-  "ask": "Every job quote gets re-typed three times — once from the email enquiry into our quoting sheet, again into Xero when it's accepted, and again into the job board. Roughly 60 quotes a week. We want the email to land and the rest to happen by itself.",
+  "ask": "Every job quote gets re-typed three times — once from the email inquiry into our quoting sheet, again into QuickBooks when it's accepted, and again into the job board. Roughly 60 quotes a week. We want the email to land and the rest to happen by itself.",
   "website": "northgateplumbingsupply.example",
-  "industry": "Wholesale / trade supply",
-  "companySize": "14 staff, 2 in the office",
+  "industry": "Wholesale / plumbing distribution",
+  "companySize": "14 employees, 2 in the office",
   "contactName": "Ruth Enwright",
   "contactRole": "Owner",
-  "budgetSignal": "Said they pay a part-time admin around £900/month mostly to do this, and would rather spend that on fixing it properly.",
+  "budgetSignal": "Said they pay a part-time admin around $1,200/month mostly to do this, and would rather spend that on fixing it properly.",
   "timeline": "Wants it working before their busy season starts in about 10 weeks.",
   "source": "Referral from a previous client",
-  "notes": "Already on Xero and uses Gmail. The job board is a Google Sheet. Ruth signs off on spend herself.",
+  "notes": "Already on QuickBooks and uses Gmail. The job board is a Google Sheet. Ruth signs off on spend herself.",
   "expected": {
     "tier": "qualified",
     "why": "Named repetitive process with volume, a real cost being paid today, owner-level decision maker, a deadline, and tools that all have APIs."

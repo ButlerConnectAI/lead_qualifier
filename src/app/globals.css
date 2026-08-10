@@ -1,26 +1,115 @@
 @import "tailwindcss";
 
+/*
+ * THIS FILE IS THE BRAND. Every colour, both typefaces and the one animation
+ * are declared here and nowhere else — no component names a colour value. Jake
+ * plans to rebrand, so a new look is an edit to the block below plus the two
+ * next/font imports in layout.tsx, and nothing else is touched.
+ *
+ * Reference: krea.ai, read from its compiled stylesheet rather than guessed.
+ * The defining property of that system is that it is completely achromatic —
+ * its neutral ramp runs #fafafa to #0b0b0b with zero chroma at every step, and
+ * hierarchy comes from weight and grey level, never from colour.
+ *
+ * That restraint is load-bearing here: because nothing else on the page is
+ * coloured, the three verdict colours are the only colour anywhere, which is
+ * what makes a tier readable at a glance without a badge shouting. Spend colour
+ * on the tier and on nothing else — a coloured button or a tinted panel would
+ * cost the verdict its only advantage.
+ *
+ * Krea's own face is Suisse Intl, which is licensed and cannot be used. This
+ * uses Instrument Sans, the closest free relative, and Fira Mono, which is what
+ * Krea actually uses for its mono.
+ *
+ * Light only. Krea's default is a pure white ground, and this follows it.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --surface: #ffffff;
+  --panel: #fafafa;
+  --panel-2: #f5f5f5;
+
+  --line: #e5e5e5;
+  --line-soft: #f1f1f1;
+
+  --ink: #171717;
+  --ink-2: #737373;
+  --ink-3: #a3a3a3;
+
+  --solid: #171717;
+  --solid-hover: #262626;
+  --on-solid: #fafafa;
+
+  --qualified: oklch(56% 0.14 152);
+  --nurture: oklch(66% 0.14 68);
+  --disqualified: oklch(55% 0.19 27);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-surface: var(--surface);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+
+  --color-solid: var(--solid);
+  --color-solid-hover: var(--solid-hover);
+  --color-on-solid: var(--on-solid);
+
+  --color-qualified: var(--qualified);
+  --color-nurture: var(--nurture);
+  --color-disqualified: var(--disqualified);
+
+  --font-sans: var(--font-instrument-sans);
+  --font-mono: var(--font-fira-mono);
+
+  /* Krea's own radii: .625rem for surfaces, .5rem for controls. */
+  --radius-panel: 0.625rem;
+  --radius-control: 0.5rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* The only motion in the app: an indeterminate segment on the progress track. */
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(400%);
+  }
+}
+
+.animate-sweep {
+  animation: sweep 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sweep {
+    animation: none;
+    transform: translateX(0);
+    width: 100%;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

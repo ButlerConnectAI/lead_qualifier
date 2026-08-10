@@ -1,4 +1,4 @@
-# AI Lead Qualifier — enquiry in, go/no-go out
+# AI Lead Qualifier — inquiry in, go/no-go out
 
 Describe a lead in a form, and Claude scores it against a written ideal-customer profile:
 a tier, a score, nine criteria judged separately with reasons, the questions to ask before
@@ -7,23 +7,24 @@ committing, and the terms to get in writing before starting.
 Next.js on Vercel for the form, a Trigger.dev task for the scoring, Claude for the
 judgment. Built with Claude Code.
 
-**Status:** the scoring half is built and working. The frontend is not — the form and the
-results page are the next stage. What's described under *Architecture* is implemented for
-the task and designed but unbuilt for the web layer; the section says which is which.
+**Status:** the scoring half is built and working, and the frontend screens — the form,
+the waiting state, the verdict — are built and styled. The two halves are not joined yet:
+submitting the form doesn't trigger a run. That connection is the current stage. The
+*Architecture* section marks which parts are implemented and which are still design.
 
 ## The problem it solves
 
 A one-person agency has one genuinely scarce resource, and it isn't leads — it's weeks.
-Every enquiry looks appealing at 9am on a Monday, and the ones that hurt aren't the
+Every inquiry looks appealing at 9am on a Monday, and the ones that hurt aren't the
 obvious time-wasters. They're the ones that read well, get accepted, and then overrun,
 sprawl, or quietly reopen themselves six weeks after sign-off.
 
-So the score isn't a description of how good the enquiry looks. **It's a prediction: will
+So the score isn't a description of how good the inquiry looks. **It's a prediction: will
 I be glad I took this?** Two consequences follow from that framing, and they shape the
 whole rubric:
 
 - **A lead that reads beautifully and turns into three months of unpaid support was
-  scored wrong**, even though nothing in the enquiry was misleading. The qualifier has to
+  scored wrong**, even though nothing in the inquiry was misleading. The qualifier has to
   reason about how the engagement will go, not how the email is written.
 - **Every verdict carries a "Protect yourself" section** — what to agree in writing before
   starting, based on how work of this shape actually goes wrong. It appears on strong
@@ -57,8 +58,10 @@ waiting on an LLM, so scoring can take as long as it needs — thinking included
 approaching a function timeout. That's the entire reason for the extra moving part, and
 it's the thing not to "simplify" into a route handler that awaits the Anthropic call.
 
-*Implemented:* the task, the scoring, the schemas, the env validation, the dev loop.
-*Designed, not yet built:* the form, the results page, the server action.
+*Implemented:* the task, the scoring, the schemas, the env validation, the dev loop, and
+the three screens — form, waiting state, verdict.
+*Designed, not yet built:* the server action that triggers the run, and the browser's
+realtime subscription to it — the two steps that join the screens to the scorer.
 
 ## Design decisions worth explaining
 
@@ -70,7 +73,7 @@ the prompt, the form, or the UI, because criteria scattered across three files d
 within a month and no single one of them is the truth any more.
 
 **Silence is never read as absence.** The single rule that overrides the rest. A lead that
-doesn't mention budget is not a lead with no budget; an enquiry that names no problem is
+doesn't mention budget is not a lead with no budget; an inquiry that names no problem is
 not a company without one. Unknown criteria cap how high a lead can score and never drag
 it down, and a real business whose only flaw is that nobody has asked it anything yet
 can't score below the middle of the nurture band. This sounds obvious and is the single
@@ -115,7 +118,7 @@ the shape of the message.
 **The task file is deliberately boring.** [`src/trigger/qualify-lead.ts`](./src/trigger/qualify-lead.ts)
 sets run metadata, validates, calls `qualify()`, logs. All the scoring logic is in
 `src/lib/` with no Trigger.dev import anywhere in it, so the prompt can be reasoned about
-without retry behaviour and run metadata tangled into it — and so the rubric is testable
+without retry behavior and run metadata tangled into it — and so the rubric is testable
 without a run.
 
 ## The bug that shaped the design
@@ -125,7 +128,7 @@ Reasonable-sounding, and wrong in a specific way: it punished leads for being **
 rather than **bad**.
 
 The tell wasn't the score. It was self-contradiction inside a single verdict — the model
-recommended sending a follow-up email while labelling the lead dead. A lead you're about
+recommended sending a follow-up email while labeling the lead dead. A lead you're about
 to email is not a lead you've walked away from.
 
 The fix was prose, not code: unknowns cap a lead at nurture rather than sinking it, and
@@ -135,7 +138,7 @@ ask a question, the tier is nurture.**
 
 ### The same bug, one level up
 
-It came back. A real accountancy firm with a named pain area scored 38 and was labelled
+It came back. A real accounting firm with a named pain area scored 38 and was labeled
 `nurture` — but the nurture band starts at 40. The model had obeyed the prose rule when
 picking the tier and scored the number independently, landing them on opposite sides of
 the boundary. Left alone, that lead sorts *below* leads you'd never call, and the number
@@ -191,7 +194,7 @@ iteration loop; deploying to test a prose change is unnecessary.
 | `npm run new-lead` | Save a lead as a test case |
 | `npm run check-env` | Verify every key is where it belongs — and isn't where it doesn't |
 | `npm run deploy:task` | Deploy the scoring task |
-| `npm run dev` | Next.js dev server *(frontend not built yet)* |
+| `npm run dev` | Next.js dev server *(screens built; not yet wired to the scorer)* |
 
 ### Two deploys, one repo
 

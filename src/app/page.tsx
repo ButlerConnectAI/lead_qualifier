@@ -1,69 +1,75 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Qualifier } from "@/components/qualifier";
+import { PREVIEW_KEYS, PREVIEW_VERDICTS, isPreviewKey } from "@/components/preview-fixtures";
 
-export default function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const { preview } = await searchParams;
+  const key = typeof preview === "string" && isPreviewKey(preview) ? preview : undefined;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="flex flex-1 flex-col">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-14 sm:px-6 sm:py-20">
+        <header className="mb-8">
+          <p className="text-sm font-medium text-ink-3">Butler Connect AI</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+            Lead Qualifier
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-3 max-w-[52ch] text-[0.9375rem] leading-relaxed text-ink-2">
+            Score an inquiry against your criteria before you reply to it. The verdict predicts
+            whether you&rsquo;ll be glad you took the work — and what to agree in writing first.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        </header>
+
+        <Qualifier key={key ?? "live"} preview={key ? PREVIEW_VERDICTS[key] : undefined} />
       </main>
+
+      {process.env.NODE_ENV !== "production" && <PreviewBar active={key} />}
     </div>
+  );
+}
+
+/**
+ * Stage 03 scaffolding — a way to see each verdict layout without a run.
+ * Dev only, and deleted along with the fixtures once stage 04 is signed off.
+ */
+function PreviewBar({ active }: { active?: string }) {
+  return (
+    <div className="sticky bottom-0 border-t border-line bg-surface/90 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center gap-2 px-5 py-2.5 sm:px-6">
+        <span className="mr-1 text-xs font-medium text-ink-3">Preview</span>
+        <PreviewLink href="/" label="Form" active={active === undefined} />
+        {PREVIEW_KEYS.map((preview) => (
+          <PreviewLink
+            key={preview}
+            href={`/?preview=${preview}`}
+            label={preview}
+            active={active === preview}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PreviewLink({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-full border px-2.5 py-1 text-xs font-medium capitalize transition-colors duration-200 ease-out ${
+        active
+          ? "border-transparent bg-solid text-on-solid"
+          : "border-line text-ink-2 hover:border-ink-3 hover:text-ink"
+      }`}
+    >
+      {label}
+    </Link>
   );
 }

@@ -31,7 +31,7 @@ down for failing to have done that work in advance.
 
 Because this is a solo operator, capacity is the scarcest resource. The score answers one
 question: **is this worth one person's limited weeks?** It is a prediction about how the
-engagement will actually go, not a description of how the enquiry reads.
+engagement will actually go, not a description of how the inquiry reads.
 
 # The one rule that overrides the rest
 
@@ -52,7 +52,7 @@ Judge every lead against these nine, in this order. Use these exact names.
 
 Is there a real business here with work that software could take over?
 
-Strong: a specific named process — "we re-key about forty invoices a week from email into Xero".
+Strong: a specific named process — "we re-key about forty invoices a week from email into QuickBooks".
 
 Adequate: a real operating business with an area of pain named loosely — "our onboarding is a
 mess", "we spend too long on reporting". This is a normal, healthy starting point. It is not a
@@ -72,7 +72,7 @@ problem yet is the normal condition of a new lead.
 How often does the work happen, and how much of it is there?
 
 Automation value is roughly linear in volume. Forty invoices a week is a business; forty a year
-is a favour. This is judged on its own rather than folded into problem fit, because a perfectly
+is a favor. This is judged on its own rather than folded into problem fit, because a perfectly
 described process that happens twice a year is not worth a week of building.
 
 Strong: daily or weekly, or high enough volume that someone's job is visibly consumed by it.
@@ -99,7 +99,7 @@ disqualifier. Only the second kind counts against them.
 ### The one exception: free consulting for a name
 
 If the company is one whose name would carry weight as a reference — a name this operator's
-target clients would recognise, or a logo that would change how the website reads — then free
+target clients would recognize, or a logo that would change how the website reads — then free
 *consulting* is a legitimate trade. The payment is the reference.
 
 This does not apply to free *building*. Consulting yes, delivery never.

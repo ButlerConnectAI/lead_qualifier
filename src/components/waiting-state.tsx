@@ -55,7 +55,7 @@ export function WaitingState({ phase }: { phase: RunPhase }) {
         </ol>
 
         <p className="mt-5 text-sm leading-relaxed text-ink-2">
-          This runs on Trigger.dev, not in the browser — you can leave the tab and come back.
+          You can leave this tab and come back — scoring carries on without it.
         </p>
       </Panel>
     </div>

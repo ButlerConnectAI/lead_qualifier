@@ -7,9 +7,10 @@ committing, and the terms to get in writing before starting.
 Next.js on Vercel for the form, a Trigger.dev task for the scoring, Claude for the
 judgment. Built with Claude Code.
 
-**Status:** working end to end, locally. Submitting the form triggers a real run and the
-verdict streams back into the page. Not deployed — there's no Vercel project yet, so
-nothing is public.
+**Status:** live at
+[lead-qualifier-beige.vercel.app](https://lead-qualifier-beige.vercel.app/). Submitting the
+form triggers a real run and the verdict streams back into the page. Both halves are
+deployed — the frontend on Vercel, the scoring task on Trigger.dev production.
 
 ## The problem it solves
 

@@ -27,8 +27,11 @@ decided, what's been tried, what not to redo. It stays on your machine and is ne
 | 02 | The scorer | **Done** — you ran all three leads, all three matched |
 | 03 | The screens | **Done** — built and you've run it |
 | 04 | Join the form to the scorer | **Done** — you ran it, a real verdict came back |
-| 05 | Put it live | **Next, and not started** — nothing is live yet, no website exists publicly |
+| 05 | Put it live | **Done** — it's on the internet, and you've scored a lead on it |
 | 06 | A way to measure rubric changes | Optional, later |
+
+**Your site is live at https://lead-qualifier-beige.vercel.app/** — open it on your phone, send
+the link to anyone. Both halves are deployed: the website on Vercel, the scorer on Trigger.dev.
 
 **The form is real.** What you type is what gets scored. The saved examples and the Preview strip
 along the bottom are gone — deleted, not hidden — so there is nothing fake left on the page to
@@ -40,11 +43,9 @@ running too**, in a second terminal. See [Look at the website](#look-at-the-webs
 **Everything is committed and pushed to GitHub.** Your keys and the internal notes were checked and
 left out; nothing sensitive is public.
 
-Pushing to GitHub still doesn't put anything on the internet, because no Vercel project exists yet.
-That's stage 05 — it's the stage that gives you a URL.
-
-Pushing to GitHub is only half a release, and right now it's the half that does nothing visible:
-there's still no website live, because no Vercel project exists yet. That's stage 05.
+**Pushing to GitHub is now only half a release.** It updates the website, and it does nothing to
+the scorer. See [Two deploys, one folder](#two-deploys-one-folder) — that trap is live from here
+on, and it's the one that will catch you.
 
 ---
 
@@ -79,8 +80,8 @@ There are two halves and they run separately:
 
 | Half | What it is | State |
 |---|---|---|
-| **The scorer** | Reads a lead, thinks, returns a verdict | Built and working |
-| **The website** | The form you type into, and the page showing the result | Screens built, not yet joined to the scorer |
+| **The scorer** | Reads a lead, thinks, returns a verdict | Live in production |
+| **The website** | The form you type into, and the page showing the result | Live at [lead-qualifier-beige.vercel.app](https://lead-qualifier-beige.vercel.app/) |
 
 They live in the same folder but ship to different places, which is the one genuine trap in this
 project. See [Two deploys, one folder](#two-deploys-one-folder).
@@ -197,7 +198,14 @@ thing that's wrong.
 
 ## Look at the website
 
-**This now needs two terminals**, because the website and the scorer are separate things and the
+**To use it, just open https://lead-qualifier-beige.vercel.app/.** No terminals, nothing to start.
+It works on your phone. That's the live one, scoring against your criteria as they were at the last
+deploy.
+
+The rest of this section is for running it **on your machine**, which you only need when you're
+trying out a change before it goes live.
+
+**This needs two terminals**, because the website and the scorer are separate things and the
 website can't score anything on its own.
 
 **Terminal 1 — start the scorer.** Leave it running, same as scoring a lead by hand:
@@ -303,7 +311,8 @@ on save — no restart.
 
 - **Nothing else needs to change.** No settings elsewhere, no code. Rewrite a paragraph and the
   scoring changes.
-- **Once the site is live, this file only affects it after a redeploy.** That's the next section.
+- **The live site keeps using the old criteria until you run `npm run deploy:task`.** That's the
+  next section, and it's the thing to remember.
 
 ---
 

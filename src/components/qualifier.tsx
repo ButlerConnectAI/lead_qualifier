@@ -169,7 +169,7 @@ function RunWatcher({
 
     onFailure(
       "Lost contact with the run",
-      "The live connection to the scorer dropped, or this run's access window expired. The run may still have finished — it'll be in the Trigger.dev dashboard. Scoring the lead again is safe.",
+      "The live connection to the scorer dropped, or this run's access window expired. The run may well have finished anyway — it'll be in your run history. Scoring the lead again is safe.",
     );
   }, [error, onFailure]);
 
@@ -179,7 +179,7 @@ function RunWatcher({
     if ((FAILED_STATUSES as readonly string[]).includes(run.status)) {
       onFailure(
         "The scoring run failed",
-        "The run started but didn't finish. The usual cause is the Anthropic key missing from the Trigger.dev dashboard — check both DEV and PROD. The full trace is in the dashboard under this run.",
+        "The run started but didn't finish. The full trace is in your run history under this run.",
       );
       return;
     }
@@ -216,7 +216,7 @@ function RunWatcher({
 
       onFailure(
         "The run took too long",
-        "Scoring usually takes 15–25 seconds and this one didn't come back. Check the Trigger.dev dashboard for what it was doing, then try again.",
+        "Scoring usually takes 15–25 seconds and this one didn't come back. It'll be in your run history if you want to see what it was doing. Try again.",
       );
     }, STALLED_AFTER_MS);
 

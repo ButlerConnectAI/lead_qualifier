@@ -41,6 +41,8 @@ flowchart TD
     C --> D[run id + per-run public token]
     D --> E[Browser]
     E -.->|useRealtimeRun, direct subscription| F[Trigger.dev]
+    E -.->|fallback: poll every 3s| L[Server action: read the run]
+    L -.-> F
     C ==> G[Trigger.dev task: qualify-lead]
     G --> H[Validate every env var]
     H --> I[Parse lead against zod schema]

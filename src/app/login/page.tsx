@@ -36,7 +36,7 @@ export default async function LoginPage({
     <AuthShell
       title="Sign in"
       caption="Scoring a lead costs real money, so the qualifier is behind an account."
-      footer={<AuthLink href="/forgot-password">Forgotten your password?</AuthLink>}
+      footer={<AuthLink href="/forgot-password">Forgot your password?</AuthLink>}
     >
       <LoginForm next={next} />
     </AuthShell>

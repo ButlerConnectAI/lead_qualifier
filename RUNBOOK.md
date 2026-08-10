@@ -32,6 +32,8 @@ decided, what's been tried, what not to redo. It stays on your machine and is ne
 
 **Your site is live at https://lead-qualifier-beige.vercel.app/** — open it on your phone, send
 the link to anyone. Both halves are deployed: the website on Vercel, the scorer on Trigger.dev.
+**You've scored a lead on it and the verdict came back**, so the whole path is proven end to end.
+Nothing is outstanding — every stage that was planned as required is finished.
 
 **The form is real.** What you type is what gets scored. The saved examples and the Preview strip
 along the bottom are gone — deleted, not hidden — so there is nothing fake left on the page to
@@ -234,9 +236,9 @@ running, rather than spinning forever. That's worth trying deliberately once —
 you're most likely to make later, and it's better to recognize the message now.
 
 **If the verdict doesn't appear but the run shows Completed in your dashboard**, that's the fault
-fixed on 2026-08-09 and it shouldn't happen again. The page now collects the result two
-independent ways, so one of them failing quietly no longer strands you. If you do see it again,
-say so — it means something new is wrong.
+that hit the live site and it's fixed — you confirmed it working on 2026-08-10. The page now
+collects the result two independent ways, so one of them going quiet no longer strands you. If you
+ever see it again, say so — it means something new is wrong.
 
 **What to judge:**
 

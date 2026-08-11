@@ -11,14 +11,14 @@ export function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(signIn, {});
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {state.error && <ErrorNotice title="Couldn't sign you in" message={state.error} />}
 
       <form action={action}>
         <input type="hidden" name="next" value={next ?? "/"} />
 
-        <Panel bare>
-          <fieldset disabled={pending} className="space-y-5 disabled:opacity-55">
+        <Panel>
+          <fieldset disabled={pending} className="space-y-4 disabled:opacity-55">
             <AuthField
               name="email"
               label="Email"
@@ -35,7 +35,7 @@ export function LoginForm({ next }: { next?: string }) {
           </fieldset>
         </Panel>
 
-        <div className="mt-3">
+        <div className="mt-4">
           <SubmitButton pending={pending}>{pending ? "Signing in…" : "Sign in"}</SubmitButton>
         </div>
       </form>

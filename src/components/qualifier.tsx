@@ -99,7 +99,7 @@ export function Qualifier() {
 
   if (state.status === "done") {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <VerdictCard verdict={state.verdict} />
         <button
           type="button"
@@ -107,7 +107,7 @@ export function Qualifier() {
             setTyped(undefined);
             setState({ status: "idle" });
           }}
-          className="rounded-control border border-line px-5 py-2.5 text-sm font-medium transition-colors duration-200 ease-out hover:border-ink-3 hover:bg-panel"
+          className="rounded-control border border-line bg-surface px-5 py-2.5 text-sm font-medium shadow-card transition-colors duration-150 ease-out hover:border-ink-3 hover:bg-surface-2"
         >
           Score another lead
         </button>
@@ -116,7 +116,7 @@ export function Qualifier() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {state.status === "error" && (
         <ErrorNotice title={state.title} message={state.message} />
       )}

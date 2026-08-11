@@ -11,12 +11,12 @@ export function SetPasswordForm() {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(setPassword, {});
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {state.error && <ErrorNotice title="Couldn't set your password" message={state.error} />}
 
       <form action={action}>
-        <Panel bare>
-          <fieldset disabled={pending} className="space-y-5 disabled:opacity-55">
+        <Panel>
+          <fieldset disabled={pending} className="space-y-4 disabled:opacity-55">
             <AuthField
               name="password"
               label="New password"
@@ -33,7 +33,7 @@ export function SetPasswordForm() {
           </fieldset>
         </Panel>
 
-        <div className="mt-3">
+        <div className="mt-4">
           <SubmitButton pending={pending}>
             {pending ? "Saving…" : "Save password and continue"}
           </SubmitButton>

@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AppShell, PageBody, PageHeader } from "@/components/app-shell";
 import { LeadSummary } from "@/components/lead-summary";
 import { Panel } from "@/components/panel";
-import { SiteHeader } from "@/components/site-header";
 import { VerdictCard } from "@/components/verdict-card";
 import { verifySession } from "@/server/dal";
 import { getHistoryEntry } from "@/server/history";
@@ -50,21 +49,12 @@ export default async function HistoryEntryPage({
   const unfinished = entry.status === "complete" ? null : UNFINISHED[entry.status];
 
   return (
-    <div className="flex flex-1 flex-col">
-      <SiteHeader email={user.email} current="history" />
-
-      <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-12 sm:px-6 sm:py-16">
-        <div className="mb-8">
-          <Link
-            href="/history"
-            className="text-sm text-ink-2 transition-colors duration-200 ease-out hover:text-ink"
-          >
-            ← History
-          </Link>
-          <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
-            {entry.lead.company}
-          </h1>
-          <p className="mt-2 font-mono text-xs text-ink-3">
+    <AppShell email={user.email} current="history">
+      <PageHeader
+        title={entry.lead.company}
+        back={{ href: "/history", label: "History" }}
+        meta={
+          <p className="mt-1.5 font-mono text-xs text-ink-3">
             Scored{" "}
             {new Date(entry.createdAt).toLocaleString("en-GB", {
               day: "2-digit",
@@ -74,15 +64,17 @@ export default async function HistoryEntryPage({
               minute: "2-digit",
             })}
           </p>
-        </div>
+        }
+      />
 
-        <div className="space-y-3">
+      <PageBody>
+        <div className="space-y-4">
           {entry.verdict ? (
             <VerdictCard verdict={entry.verdict} />
           ) : (
             unfinished && (
               <Panel title={unfinished.title}>
-                <p className="text-[0.9375rem] leading-relaxed text-ink-2">
+                <p className="max-w-[70ch] text-[0.9375rem] leading-relaxed text-ink-2">
                   {unfinished.message}
                 </p>
               </Panel>
@@ -91,7 +83,7 @@ export default async function HistoryEntryPage({
 
           <LeadSummary lead={entry.lead} />
         </div>
-      </main>
-    </div>
+      </PageBody>
+    </AppShell>
   );
 }

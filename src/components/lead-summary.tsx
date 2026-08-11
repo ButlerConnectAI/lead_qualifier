@@ -34,10 +34,13 @@ export function LeadSummary({ lead }: { lead: Lead }) {
   });
 
   return (
-    <Panel title="The lead as you entered it">
+    <Panel title="The lead as you entered it" padded={false}>
       <dl className="divide-y divide-line-soft">
         {present.map((field) => (
-          <div key={field} className="py-3 first:pt-0 last:pb-0 sm:grid sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-4">
+          <div
+            key={field}
+            className="px-5 py-3 sm:grid sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4 sm:px-6"
+          >
             <dt className="text-sm text-ink-2">{LABELS[field]}</dt>
             <dd className="mt-1 whitespace-pre-wrap text-[0.9375rem] leading-relaxed sm:mt-0">
               {lead[field]}

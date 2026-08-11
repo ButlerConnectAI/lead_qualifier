@@ -526,23 +526,49 @@ trace. Find it by the `run_...` ID printed when you started it.
 
 Not needed to run anything — this is just the reasoning, so you can push back on it.
 
-It's built from **krea.ai**, the page you picked. Rather than copy it by eye, I read the real
-stylesheet off their site, so the greys, corner radius and type sizes are their actual numbers.
+**Redesigned on 2026-08-11**, after you said the old one looked generic. It did, and the reason is
+worth writing down: the previous version was a narrow centre column of near-identical grey boxes.
+That's the shape of a page, not of a product. It was faithfully copied from a reference site you
+picked, but what got copied was its colour scheme rather than its structure — and structure is what
+makes something look finished.
 
-The rule that makes their site work: **it has no colour in it at all.** Every grey is a true
-neutral. Depth comes from two greys one step apart with a hairline between them, and emphasis comes
-from text being heavier or lighter — never from colour.
+**What changed is the frame.** There's now a proper sidebar down the left with the product name,
+the two places you can go, and your account. The page you're on has its own title bar. The working
+area is wider. That's the layout every product application uses, and it's the single thing that
+separates "a website with a form on it" from "a tool".
 
-Keeping that rule buys something here. If nothing else is coloured, **the verdict is the only
-colour on the page** — so a green, amber or red stripe across the top of the result reads instantly
-without a badge shouting about it. The score itself stays black; the stripe already said it.
+**Two typefaces, doing different jobs.** You said the type wasn't eye-catching, and it wasn't — it
+was all set in one face chosen specifically for being invisible, and nothing on the page was big.
+
+- **The interface face stays quiet** — buttons, labels, form fields, table rows. At that size a
+  typeface with opinions just becomes noise, and this is what makes the app feel calm.
+- **A second face carries the voice**, and it only appears in four places: the page title, the
+  verdict headline, the score, and the next action. It's a wider, more characterful face that
+  tightens up as it gets bigger.
+- **Everything that should be big now is.** The score, the headline and the page titles all roughly
+  doubled.
+
+If the display face is too much, it's one line to swap and everything else stays put. Say so.
+
+The other changes follow from that:
+
+- **A blue for anything you click**, used nowhere else. Buttons, links, the highlighted nav item.
+- **Green, amber and red mean one thing only** — the verdict — and never appear on a button. If the
+  button and the "Qualified" badge were the same colour, the badge would stop telling you anything.
+- **The score now sits on a 0–100 bar** with the two boundaries marked on it. A bare number can't
+  tell you that 71 is *barely* qualified and 96 isn't; its position on the line can.
+- **"Ask before committing" and "Protect yourself" sit side by side** on a wide screen, because you
+  read them together when you're preparing for the call.
+- **The form is two columns** instead of eleven stacked fields. Same fields, reads as half the work.
+- **History is a real table** with verdict and score in fixed columns, so you can run your eye down
+  it instead of reading every row.
 
 Two things to decide deliberately:
 
-- **It's light**, because Krea is. Your own site is dark. The dark version is a small change, not a
-  rebuild.
-- **It no longer resembles butlerconnectai.com.** That was the point of using a different
-  reference, but it's your call whether you're happy with it.
+- **It's still light.** Your own site is dark. A dark version is a change to one file, not a
+  rebuild — say the word.
+- **It doesn't resemble butlerconnectai.com.** It reads as a professional tool rather than as your
+  agency's brand. Your call whether that's what you want in front of a client.
 
 **When you rebrand, this doesn't need rebuilding.** Every colour and both fonts are declared in one
 file and nothing else in the site names a colour, so a new brand is a short edit in one place. The

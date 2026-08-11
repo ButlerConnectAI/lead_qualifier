@@ -12,13 +12,25 @@ import { Panel } from "./panel";
  * Only company and ask are required. Everything else submits blank without
  * complaint, because a lead that arrives thin is itself a signal the rubric
  * knows how to read.
+ *
+ * The short context fields pair up two to a row. Eleven fields stacked in one
+ * column reads as a long form and gets abandoned; the same eleven in a grid
+ * reads as a short one, and the fields that pair are the ones you'd naturally
+ * fill together — a name and the role next to it.
  */
 
 type FieldName = (typeof LEAD_FIELDS)[number];
 
 const FIELDS: Record<
   FieldName,
-  { label: string; hint?: string; placeholder: string; multiline?: boolean; rows?: number }
+  {
+    label: string;
+    hint?: string;
+    placeholder: string;
+    multiline?: boolean;
+    rows?: number;
+    half?: boolean;
+  }
 > = {
   company: {
     label: "Company",
@@ -32,11 +44,11 @@ const FIELDS: Record<
     multiline: true,
     rows: 5,
   },
-  website: { label: "Website", placeholder: "kesslerroth.com" },
-  industry: { label: "Industry", placeholder: "Accounting firm" },
-  companySize: { label: "Size", placeholder: "About 30 employees" },
-  contactName: { label: "Contact name", placeholder: "Ruth Enwright" },
-  contactRole: { label: "Their role", placeholder: "Owner" },
+  website: { label: "Website", placeholder: "kesslerroth.com", half: true },
+  industry: { label: "Industry", placeholder: "Accounting firm", half: true },
+  companySize: { label: "Size", placeholder: "About 30 employees", half: true },
+  contactName: { label: "Contact name", placeholder: "Ruth Enwright", half: true },
+  contactRole: { label: "Their role", placeholder: "Owner", half: true },
   budgetSignal: {
     label: "Budget signal",
     hint: "Anything they said about money, in their words. Leave blank if they said nothing — blank is not the same as no budget.",
@@ -50,7 +62,11 @@ const FIELDS: Record<
     multiline: true,
     rows: 2,
   },
-  source: { label: "Where they came from", placeholder: "Referral from a previous client" },
+  source: {
+    label: "Where they came from",
+    placeholder: "Referral from a previous client",
+    half: true,
+  },
   notes: {
     label: "Anything else",
     hint: "Systems they mentioned, who signs off, how the call felt.",
@@ -114,10 +130,10 @@ export function LeadForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-3">
-      <fieldset disabled={busy} className="space-y-3 disabled:opacity-55">
-        <Panel bare>
-          <div className="space-y-5">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <fieldset disabled={busy} className="space-y-4 disabled:opacity-55">
+        <Panel title="The lead" caption="The two things the scorer can't work without.">
+          <div className="grid gap-4 sm:grid-cols-2">
             {REQUIRED.map((field) => (
               <Field
                 key={field}
@@ -135,7 +151,7 @@ export function LeadForm({
           title="Context"
           caption="All optional. Leave anything blank that they didn't say — guessing on their behalf is worse than an empty field."
         >
-          <div className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
             {OPTIONAL.map((field) => (
               <Field
                 key={field}
@@ -149,13 +165,31 @@ export function LeadForm({
         </Panel>
       </fieldset>
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-full rounded-control bg-solid px-6 py-3 text-sm font-semibold text-on-solid transition-colors duration-200 ease-out hover:bg-solid-hover disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
-      >
-        {busy ? "Scoring…" : "Score this lead"}
-      </button>
+      <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+        <p className="mr-auto text-sm text-ink-2">Takes 15–25 seconds.</p>
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-control bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-card transition-colors duration-150 ease-out hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
+        >
+          {busy ? "Scoring…" : "Score this lead"}
+          {!busy && (
+            <svg
+              aria-hidden
+              viewBox="0 0 16 16"
+              className="size-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 8h9.5M8.5 4l4 4-4 4" />
+            </svg>
+          )}
+        </button>
+      </div>
     </form>
   );
 }
@@ -187,17 +221,21 @@ function Field({
     onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       onChange(event.target.value),
     className: [
-      "w-full rounded-control border bg-surface px-3 py-2.5 text-[0.9375rem] leading-relaxed",
-      "placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-0",
+      "w-full rounded-control border bg-surface px-3 py-2 text-[0.9375rem] leading-relaxed",
+      "shadow-card transition-colors duration-150 ease-out placeholder:text-ink-3",
+      "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary",
       error ? "border-disqualified" : "border-line hover:border-ink-3",
     ].join(" "),
   };
 
   return (
-    <div>
-      <label htmlFor={name} className="block text-sm font-medium tracking-tight">
+    <div className={config.half ? "" : "sm:col-span-2"}>
+      <label
+        htmlFor={name}
+        className="flex flex-wrap items-baseline gap-x-2 text-sm font-medium tracking-[-0.01em]"
+      >
         {config.label}
-        {!required && <span className="ml-2 font-normal text-ink-3">optional</span>}
+        {!required && <span className="text-xs font-normal text-ink-3">optional</span>}
       </label>
 
       {config.hint && (
@@ -206,7 +244,7 @@ function Field({
         </p>
       )}
 
-      <div className="mt-2">
+      <div className="mt-1.5">
         {config.multiline ? (
           <textarea {...shared} rows={config.rows ?? 3} />
         ) : (
@@ -215,7 +253,7 @@ function Field({
       </div>
 
       {error && (
-        <p id={errorId} role="alert" className="mt-2 text-sm text-disqualified">
+        <p id={errorId} role="alert" className="mt-1.5 text-sm text-disqualified">
           {error}
         </p>
       )}

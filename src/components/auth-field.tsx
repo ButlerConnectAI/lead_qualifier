@@ -26,10 +26,10 @@ export function AuthField({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium tracking-tight">
+      <label htmlFor={name} className="block text-sm font-medium tracking-[-0.01em]">
         {label}
       </label>
-      <div className="mt-2">
+      <div className="mt-1.5">
         <input
           id={name}
           name={name}
@@ -38,7 +38,7 @@ export function AuthField({
           required={required}
           defaultValue={defaultValue}
           autoFocus={autoFocus}
-          className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-[0.9375rem] leading-relaxed placeholder:text-ink-3 hover:border-ink-3 focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-0"
+          className="w-full rounded-control border border-line bg-surface px-3 py-2 text-[0.9375rem] leading-relaxed shadow-card transition-colors duration-150 ease-out placeholder:text-ink-3 hover:border-ink-3 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
     </div>
@@ -50,7 +50,7 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-control bg-solid px-6 py-3 text-sm font-semibold text-on-solid transition-colors duration-200 ease-out hover:bg-solid-hover disabled:cursor-not-allowed disabled:opacity-45"
+      className="w-full rounded-control bg-primary px-6 py-2.5 text-sm font-semibold text-on-primary shadow-card transition-colors duration-150 ease-out hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-45"
     >
       {children}
     </button>

@@ -22,11 +22,11 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {state.error && <ErrorNotice title="Couldn't send the link" message={state.error} />}
 
       <form action={action}>
-        <Panel bare>
+        <Panel>
           <fieldset disabled={pending} className="disabled:opacity-55">
             <AuthField
               name="email"
@@ -38,7 +38,7 @@ export function ForgotPasswordForm() {
           </fieldset>
         </Panel>
 
-        <div className="mt-3">
+        <div className="mt-4">
           <SubmitButton pending={pending}>
             {pending ? "Sending…" : "Email me a reset link"}
           </SubmitButton>

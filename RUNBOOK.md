@@ -29,20 +29,22 @@ decided, what's been tried, what not to redo. It stays on your machine and is ne
 | 04 | Join the form to the scorer | **Done** — you ran it, a real verdict came back |
 | 05 | Put it live | **Done** — it's on the internet, and you've scored a lead on it |
 | 06 | A way to measure rubric changes | Optional, later |
-| 07 | Accounts, and saved lead history | **Built, not yet set up** — needs the one-time Supabase setup below |
+| 07 | Accounts, and saved lead history | **Done** — live, you're signed in, and you've tested it |
 
 **Your site is live at https://lead-qualifier-beige.vercel.app/** — both halves are deployed: the
 website on Vercel, the scorer on Trigger.dev. **You've scored a lead on it and the verdict came
 back**, so the whole path is proven end to end.
 
-> **One thing is outstanding.** Stage 07 — accounts and saved history — is **built but not set
-> up**. The code is in place; it needs a Supabase project before it will do anything. Until you do
-> [Set up accounts](#set-up-accounts-once), the site will show "Accounts aren't set up yet"
-> instead of the form. Nothing was lost — that's the code telling you what it's waiting for.
+> **The site is no longer open to anyone with the link.** As of 2026-08-11 it's behind a sign-in,
+> you have an account, and every lead you score is saved to your own history. A stranger who finds
+> the URL can no longer spend your Anthropic money.
 >
-> Note what changes when you finish it: **the site stops being open to anyone with the link.**
-> Right now a stranger who finds the URL can score leads on your Anthropic bill. Afterwards, only
-> people you've invited can, and every lead you score is saved so you can look back at it.
+> You tested this yourself: a second account could not read your leads, even given the direct
+> address of one. That refusal comes from the database, not from the page hiding things.
+>
+> **One thing is still open**, and it's the reason to keep [Signing in, and inviting
+> people](#signing-in-and-inviting-people) handy: **you can't invite anyone by email yet.** Add
+> people by hand for now. Connecting an email provider fixes it and takes about twenty minutes.
 
 **The form is real.** What you type is what gets scored. The saved examples and the Preview strip
 along the bottom are gone — deleted, not hidden — so there is nothing fake left on the page to
@@ -160,10 +162,14 @@ Paste each value after its `=`. Save the file.
 
 - Set **Site URL** to `https://lead-qualifier-beige.vercel.app`
 - Under **Redirect URLs**, add both of these:
-  - `https://lead-qualifier-beige.vercel.app/auth/callback`
-  - `http://localhost:3000/auth/callback`
+  - `https://lead-qualifier-beige.vercel.app/**`
+  - `http://localhost:3000/**`
 
-Without this, the links in your invite emails will refuse to work.
+The `/**` matters and is not decoration. Emailed links come back carrying extra
+information on the end of the address, and Supabase checks the *whole* address against this
+list. Register the plain page address on its own and the version that actually arrives isn't
+recognised — Supabase silently sends the person to your home page instead, which bounces them
+to sign-in, and the link appears to do nothing. That cost an hour to find on 2026-08-10.
 
 **6. Put the same two values in Vercel.** Vercel → your project → **Settings → Environment
 Variables**. Add the same two names and values. Then redeploy, or just push anything, so the live
@@ -185,24 +191,39 @@ in the browser is intended, and "All good."
 **There is no sign-up page, on purpose.** Anyone who could sign themselves up could score leads on
 your Anthropic bill. You create the accounts.
 
-**To invite someone (including yourself, the first time):**
+**Add someone by hand. Don't use "Send invitation email" — it doesn't work yet, and why is worth
+knowing.**
 
-Supabase → **Authentication → Users** → **Add user** → **Send invitation email**. Type their email
-address and send it.
+Supabase → **Authentication → Users** → **Add user** → **Create new user**. Enter their email and a
+password, and turn on **Auto Confirm User**.
 
-They get an email with a link. Clicking it brings them to your site and asks them to choose a
-password. After that they're in, and they sign in with that email and password from then on.
+That's the whole thing. No email is sent, so there's no link to click and nothing to expire.
 
 **Do this for yourself first**, before anything else — until you do, you can't get into your own
 site.
 
-**Forgotten password:** there's a link on the sign-in page. It emails a fresh link that lets you
-pick a new one. The link is good for about an hour and only works once.
+**Then have them set their own password**, so you aren't the one holding it: tell them to go to the
+site and click *Forgot your password?*. They get a reset email and choose their own. From then on
+you don't know it, which is how it should be.
 
-> **A warning about email.** Supabase's built-in mailer is rate-limited to a handful of messages an
-> hour and is meant for testing. That's fine for inviting a few people. If you ever need to invite
-> a lot at once, they'll silently stop arriving and you'll need to connect a real email provider —
-> ask and it can be set up.
+### Why the invite button is off limits
+
+Supabase's invite email sends people to your site's front page rather than to the page built to
+catch invite links. Fixing that means editing the email template, and **Supabase locks template
+editing unless you connect your own email provider.** The page shows *"Set up custom SMTP to edit
+templates"* where the fields would be.
+
+The reset-password email doesn't have this problem, because that one is triggered by your site and
+carries the right destination with it.
+
+> **The built-in mailer sends about two messages an hour**, and past that they silently stop —
+> no error, no email. If a reset link doesn't arrive, that's usually why. Wait an hour.
+
+**When you're ready to give other people access properly**, connect an email provider (Resend or
+similar, free at your volume). That does three things at once: emails actually send, the limit goes
+from two an hour to plenty, the templates unlock so the invite button starts working — and the
+emails come from your domain instead of Supabase's, which matters if a client ever receives one.
+About twenty minutes. Ask and it gets set up.
 
 ---
 
@@ -488,8 +509,9 @@ you haven't found a bug, you've found this. Run `npm run deploy:task`.
 | `npm` isn't recognized, or commands do nothing | Wrong folder. You need to be in `C:\Lead Qualifier`. |
 | "Accounts aren't set up yet" | The Supabase keys are missing. Work through [Set up accounts](#set-up-accounts-once), then `npm run check-env`. |
 | It keeps sending me back to the sign-in page | Your session isn't sticking. Usually the two Supabase variables are missing from **Vercel** (they're set locally, so it works on your machine and not on the live site). |
-| The invite email link says "That link didn't work" | Either it's been used already, or it's over an hour old, or the redirect URLs in step 5 above are missing. Send a fresh invite and check step 5. |
-| The invite email never arrives | Check spam first. Supabase's built-in mailer is rate-limited — if you've sent several in a row, wait an hour. |
+| An emailed link dumps me back on the sign-in page | The link's destination isn't on Supabase's allowed list, so it was thrown away and you got sent to the home page instead. Check the redirect URLs in step 5 end in `/**`. |
+| The invite email link does nothing useful | Expected — invite emails are broken until you connect an email provider. Add the person by hand instead: [Signing in, and inviting people](#signing-in-and-inviting-people). |
+| An email never arrives | Check spam first. The built-in mailer sends about two an hour and then goes silent with no error. Wait an hour, or add the person by hand and skip email. |
 | A lead is stuck on "Scoring…" in History | Open the History page and give it a few seconds; it catches up on its own. If it says "Result expired", the scorer's record of it aged out — score the lead again. |
 
 **The Anthropic key lives in the Trigger.dev dashboard and nowhere else** — deliberately, so there's

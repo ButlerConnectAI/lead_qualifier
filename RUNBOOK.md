@@ -5,7 +5,7 @@ How to run this thing yourself.
 `CLAUDE.md` in this folder is written for Claude. **This file is written for you.** No code, no
 jargon. If something here doesn't work as described, the file is wrong — say so and it gets fixed.
 
-**Every command assumes you're in `C:\Lead Qualifier`.**
+**Every command assumes you're in `C:\Personal\Lead Qualifier`.**
 
 ---
 
@@ -506,7 +506,7 @@ you haven't found a bug, you've found this. Run `npm run deploy:task`.
 | The run starts, then fails partway | Almost always the Anthropic key missing from the Trigger.dev dashboard. Check both DEV and PROD at [cloud.trigger.dev](https://cloud.trigger.dev). |
 | On the site: "Couldn't get the result back" | Both ways the page has of collecting the verdict went quiet at once — almost always your connection. The scoring itself may well have finished; it'll be in your run history. Scoring again is safe and costs one more run. |
 | On the site: "The run took too long" | The scorer genuinely hadn't finished after three minutes. Rare. It'll be in your run history with what it was doing. |
-| `npm` isn't recognized, or commands do nothing | Wrong folder. You need to be in `C:\Lead Qualifier`. |
+| `npm` isn't recognized, or commands do nothing | Wrong folder. You need to be in `C:\Personal\Lead Qualifier`. |
 | "Accounts aren't set up yet" | The Supabase keys are missing. Work through [Set up accounts](#set-up-accounts-once), then `npm run check-env`. |
 | It keeps sending me back to the sign-in page | Your session isn't sticking. Usually the two Supabase variables are missing from **Vercel** (they're set locally, so it works on your machine and not on the live site). |
 | An emailed link dumps me back on the sign-in page | The link's destination isn't on Supabase's allowed list, so it was thrown away and you got sent to the home page instead. Check the redirect URLs in step 5 end in `/**`. |
